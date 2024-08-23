@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <title>Bootcamp API's</title>
+</head>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+    }
+
+    .container {
+        width: 80%;
+        margin: auto;
+        padding: 20px;
+        background: #fff;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        margin-top: 20px;
+    }
+
+    h1,
+    h2,
+    h3 {
+        color: #333;
+    }
+
+    h1 {
+        font-size: 2em;
+        margin-bottom: 20px;
+    }
+
+    h2 {
+        font-size: 1.5em;
+        margin-top: 20px;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 10px;
+    }
+
+    button {
+        display: inline-block;
+        padding: 10px 20px;
+        font-size: 1em;
+        color: #fff;
+        background-color: #007bff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+
+    form {
+        margin-top: 20px;
+    }
+
+    input {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+
+    .result {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #e9ecef;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+
+    #updateCarForm {
+        margin-top: 20px;
+    }
+
+    #updateCarResult {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #e9ecef;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+</style>
+
+<body>
+    <div class="container">
+        <h2>Word Game</h2>
+        <input id="sentenceInput" type="text" placeholder="Enter a sentence">
+        <button id="analyzeBtn">Analyze</button>
+
+        <div>
+            <p>Longest Word: <span id="longestWord"></span></p>
+            <p>Shortest Word: <span id="shortestWord"></span></p>
+            <p>Total Word Lengths: <span id="wordLengths"></span></p>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Phone Bill Calculator</h2>
+
+        <label for="billString">Enter Bill String:</label>
+        <input id="billString" type="text" placeholder="e.g., call,sms,call">
+
+        <label for="smsPrice">SMS Price (R):</label>
+        <input id="smsPrice" type="number" step="0.01" min="0" value="0.65">
+
+        <label for="callPrice">Call Price (R):</label>
+        <input id="callPrice" type="number" step="0.01" min="0" value="2.75">
+
+        <button id="calculateTotalBtn">Calculate Total Bill</button>
+
+        <div class="result" id="totalResult" style="display: none;">
+            Total Bill: <span id="totalAmount"></span>
+        </div>
+    </div>
+
+    <div class="widget" x-data="enoughAirtime()">
+        <h2>Enough Airtime Widget</h2>
+        <input type="text" x-model="usage" placeholder="Enter usage (call,sms,data)">
+        <input type="number" x-model="available" placeholder="Available airtime" step="0.01">
+        <button onclick="calculateAirtime()">Check Airtime</button>
+        <p>Remaining Airtime: <span id="remainingBalance"></span></p>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const calculateTotalBtn = document.getElementById('calculateTotalBtn');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const checkAirtimeBtn = document.getElementById('checkAirtimeBtn');
+
+            if (calculateTotalBtn) {
+                calculateTotalBtn.addEventListener('click', calculateTotalPhoneBill);
+            }
+            if (analyzeBtn) {
+                analyzeBtn.addEventListener('click', analyzeSentence);
+            }
+            if (checkAirtimeBtn) {
+                checkAirtimeBtn.addEventListener('click', enoughAirtime);
+            }
+        });
+
+        function calculateTotalPhoneBill() {
+            const billInput = document.getElementById('billString');
+            const smsPriceInput = document.getElementById('smsPrice');
+            const callPriceInput = document.getElementById('callPrice');
+            const totalAmount = document.getElementById('totalAmount');
+            const totalResult = document.getElementById('totalResult');
+
+            const billString = billInput.value;
+            const smsPrice = parseFloat(smsPriceInput.value);
+            const callPrice = parseFloat(callPriceInput.value);
+
+            // Split the bill string by commas
+            const billArray = billString.split(',').map(item => item.trim());
+
+            // Initialize counters for SMS and call
+            let smsCount = 0;
+            let callCount = 0;
+
+            // Count the occurrences of SMS and call
+            billArray.forEach(item => {
+                if (item === 'sms') smsCount++;
+                if (item === 'call') callCount++;
+            });
+
+            // Calculate total cost
+            const totalCost = (smsCount * smsPrice) + (callCount * callPrice);
+            totalAmount.textContent = 'R' + totalCost.toFixed(2);
+            totalResult.style.display = 'block';
+        }
+
+        async function analyzeSentence() {
+            const sentenceInput = document.getElementById('sentenceInput');
+            const longestWordSpan = document.getElementById('longestWord');
+            const shortestWordSpan = document.getElementById('shortestWord');
+            const wordLengthsSpan = document.getElementById('wordLengths');
+
+            try {
+                const response = await axios.get(`http://localhost:3002/api/word_game?sentence=${encodeURIComponent(sentenceInput.value)}`);
+                const data = response.data;
+
+                longestWordSpan.textContent = data.longestWord || '';
+                shortestWordSpan.textContent = data.shortestWord || '';
+                wordLengthsSpan.textContent = data.wordLengths || '';
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                longestWordSpan.textContent = 'Error fetching data.';
+                shortestWordSpan.textContent = 'Error fetching data.';
+                wordLengthsSpan.textContent = 'Error fetching data.';
+            }
+        }
+    function calculateAirtime() {
+        const usage = document.querySelector('[x-model="usage"]').value;
+        const available = parseFloat(document.querySelector('[x-model="available"]').value);
+        const remainingBalance = enoughAirtime(usage, available);
+        console.log(remainingBalance);
+        const result = document.getElementById('remainingBalance');
+        result.textContent = remainingBalance;
+
+    }
+    function enoughAirtime(usage, airtime) {
+        const actions = usage.split(",");
+        for (let i = 0; i < actions.length; i++) {
+            let action = actions[i].trim();
+            if (action === "call" && airtime > 1.88) {
+                airtime -= 1.88;
+            } else if (action === "sms" && airtime > 0.75) {
+                airtime -= 0.75;
+            } else if (action === "data" && airtime > 12) {
+                airtime -= 12;
+            } else {
+                airtime = 0;
+                break;
+            }
+        }
+        return "R" + airtime.toFixed(2);
+    }
+    </script>
+    <!-- <script src="./indexData.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</body>
+
+</html>

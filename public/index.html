@@ -188,7 +188,7 @@
             const wordLengthsSpan = document.getElementById('wordLengths');
 
             try {
-                const response = await axios.get(`https://github.com/madlopatalent/BootCamp_Apis.git/api/word_game?sentence=${encodeURIComponent(sentenceInput.value)}`);
+                const response = await axios.get(`http://localhost:3002/api/word_game?sentence=${encodeURIComponent(sentenceInput.value)}`);
                 const data = response.data;
 
                 longestWordSpan.textContent = data.longestWord || '';
